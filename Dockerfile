@@ -1,18 +1,18 @@
-FROM eclipse-temurin:21-jdk AS builder
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-COPY . .
+COPY pom.xml .
+COPY src ./src
 
-RUN chmod +x mvnw \
-    && ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jre
+FROM tomcat:11-jdk21-temurin
 
-WORKDIR /app
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=build /app/target/WEB_W1-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["catalina.sh", "run"]
